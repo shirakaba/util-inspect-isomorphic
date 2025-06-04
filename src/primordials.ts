@@ -373,7 +373,7 @@ const ArrayPrototype = Array.prototype;
 
 const SafeReflect = Reflect;
 
-const ArrayIsArray = staticCall(Array.isArray);
+const ArrayIsArray = staticCall(Array.isArray) as (typeof Array)["isArray"];
 const ArrayPrototypeFilter = uncurryThis(ArrayPrototype.filter);
 const ArrayPrototypeForEach = uncurryThis(ArrayPrototype.forEach);
 const ArrayPrototypeIncludes = uncurryThis(ArrayPrototype.includes);

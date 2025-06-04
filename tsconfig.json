@@ -2,7 +2,8 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ES6",
-    "lib": ["ES2022"],
+    // Adding DOM types purely for URL.
+    "lib": ["ES2022", "DOM"],
     "strict": true
   }
 }
