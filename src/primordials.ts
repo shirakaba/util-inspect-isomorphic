@@ -137,6 +137,7 @@ export {
   TypedArrayPrototypeGetLength,
   TypedArrayPrototypeGetSymbolToStringTag,
   Uint8Array,
+  Int8Array,
   uncurryThis,
   WeakMap,
   WeakMapPrototype,
@@ -201,10 +202,10 @@ const {
   String,
   Symbol,
   TypeError,
-  Uint16Array,
-  Uint32Array,
   Uint8Array,
+  Uint16Array,
   Uint8ClampedArray,
+  Uint32Array,
   WeakMap,
   WeakSet,
 } = GLOBALTHIS;
@@ -511,6 +512,7 @@ const StringPrototypeReplace = uncurryThis(String.prototype.replace) as {
     replacer: (substring: string, ...args: any[]) => string,
   ): string;
 };
+
 const StringPrototypeSlice = uncurryThis(String.prototype.slice);
 const StringPrototypeSplit = uncurryThis(String.prototype.split);
 const StringPrototypeStartsWith = uncurryThis(String.prototype.startsWith);
@@ -678,7 +680,12 @@ const primordials = OBJECT.assign(OBJECT.create(null) as {}, {
   Error,
   ErrorPrototype,
   ErrorPrototypeToString,
+  Float32Array,
+  Float64Array,
   Function,
+  Int16Array,
+  Int32Array,
+  Int8Array,
   FunctionPrototype,
   FunctionPrototypeBind,
   FunctionPrototypeCall,
@@ -765,6 +772,9 @@ const primordials = OBJECT.assign(OBJECT.create(null) as {}, {
   TypedArrayPrototypeGetLength,
   TypedArrayPrototypeGetSymbolToStringTag,
   Uint8Array,
+  Uint16Array,
+  Uint8ClampedArray,
+  Uint32Array,
   uncurryThis,
   WeakMap,
   WeakMapPrototype,

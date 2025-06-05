@@ -1,9 +1,54 @@
-// isAsyncFunction;
-// isGeneratorFunction;
-// isArgumentsObject;
 // isExternal;
 // isModuleNamespaceObject;
 // isNativeError;
+
+export function isAsyncFunction(value: unknown): value is PromiseLike<unknown> {
+  if (typeof value !== "function") {
+    return false;
+  }
+
+  try {
+    const stringification = (
+      value as unknown as { valueOf(): string }
+    ).valueOf();
+    return (
+      stringification.startsWith("[AsyncFunction: ") &&
+      stringification.endsWith("]")
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+export function isGeneratorFunction(
+  value: unknown,
+): value is GeneratorFunction {
+  if (typeof value !== "function") {
+    return false;
+  }
+
+  try {
+    const stringification = (
+      value as unknown as { valueOf(): string }
+    ).valueOf();
+    return (
+      stringification.startsWith("[GeneratorFunction: ") &&
+      stringification.endsWith("]")
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+export function isArgumentsObject(value: unknown): value is IArguments {
+  try {
+    return (
+      (value as { toString(): string }).toString() === "[object Arguments]"
+    );
+  } catch (error) {
+    return false;
+  }
+}
 
 /**
  * This can't handle all boxed primitives types, but catches a few of them.
@@ -93,9 +138,9 @@ export function isTypedArray(value: unknown) {
     value instanceof Uint32Array ||
     // value instanceof Float16Array ||
     value instanceof Float32Array ||
-    value instanceof Float64Array ||
-    value instanceof BigInt64Array ||
-    value instanceof BigUint64Array
+    value instanceof Float64Array
+    // value instanceof BigInt64Array ||
+    // value instanceof BigUint64Array
   );
 }
 
