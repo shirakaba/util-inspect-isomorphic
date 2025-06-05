@@ -1,5 +1,5 @@
 import { hideStackFrames } from "./internal-errors.js";
-import { ArrayIsArray } from "./primordials.js";
+import { primordials } from "./primordials.js";
 
 export const validateString: (
   value: unknown,
@@ -33,7 +33,7 @@ export const validateObject = hideStackFrames(
     // JB: Implementing ERR_INVALID_ARG_TYPE is a deep rabbit hole.
 
     if (options === kValidateObjectNone) {
-      if (value === null || ArrayIsArray(value)) {
+      if (value === null || primordials.ArrayIsArray(value)) {
         // throw new ERR_INVALID_ARG_TYPE(name, "Object", value);
         throw new TypeError(
           `Expected Object for parameter "${name}", but got ${typeof value}.`,
@@ -58,7 +58,7 @@ export const validateObject = hideStackFrames(
 
       const throwOnArray = (kValidateObjectAllowArray & options) === 0;
 
-      if (throwOnArray && ArrayIsArray(value)) {
+      if (throwOnArray && primordials.ArrayIsArray(value)) {
         // throw new ERR_INVALID_ARG_TYPE(name, "Object", value);
         throw new TypeError(
           `Expected Object for parameter "${name}", but got ${typeof value}.`,

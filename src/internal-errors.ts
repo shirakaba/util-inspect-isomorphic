@@ -1,4 +1,4 @@
-import { ReflectApply } from "./primordials.js";
+import { primordials } from "./primordials.js";
 
 /**
  * This function removes unnecessary frames from Node.js core errors.
@@ -9,7 +9,7 @@ export function hideStackFrames<T extends (...args: Array<any>) => any>(
   function wrappedFn(...args: Array<unknown>) {
     try {
       // @ts-ignore
-      return ReflectApply(fn, this, args);
+      return primordials.ReflectApply(fn, this, args);
     } catch (error) {
       "stackTraceLimit" in Error &&
         Error.stackTraceLimit &&

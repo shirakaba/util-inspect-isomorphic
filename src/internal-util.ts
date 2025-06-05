@@ -1,9 +1,9 @@
-import { StringPrototypeReplace } from "./primordials.js";
+import { primordials } from "./primordials.js";
 
 const colorRegExp = /\u001b\[\d\d?m/g;
 
 export function removeColors(str: string) {
-  return StringPrototypeReplace(str, colorRegExp, "");
+  return primordials.StringPrototypeReplace(str, colorRegExp, "");
 }
 
 export function isError(e: unknown) {
