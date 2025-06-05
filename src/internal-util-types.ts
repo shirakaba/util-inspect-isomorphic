@@ -1,6 +1,23 @@
-// isExternal;
-// isModuleNamespaceObject;
-// isNativeError;
+/**
+ * JB: No way to do this engine-agnostically, so just return false.
+ */
+export function isNativeError(value: unknown): value is Error {
+  return false;
+}
+
+/**
+ * JB: No way to do this engine-agnostically, so just return false.
+ */
+export function isModuleNamespaceObject(value: unknown): value is any {
+  return false;
+}
+
+/**
+ * JB: No way to do this engine-agnostically, so just return false.
+ */
+export function isExternal(value: unknown): value is any {
+  return false;
+}
 
 export function isAsyncFunction(value: unknown): value is PromiseLike<unknown> {
   if (typeof value !== "function") {

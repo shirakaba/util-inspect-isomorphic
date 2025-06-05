@@ -95,7 +95,7 @@ const {
   StringPrototypeEndsWith,
   StringPrototypeIncludes,
   StringPrototypeIndexOf,
-  StringPrototypeLastIndexOf,
+  // StringPrototypeLastIndexOf,
   StringPrototypeNormalize,
   StringPrototypePadEnd,
   StringPrototypePadStart,
@@ -123,18 +123,9 @@ const {
   WeakSet,
   WeakSetPrototype,
   globalThis,
-  uncurryThis,
+  // uncurryThis,
 } = primordials;
 
-// const {
-//   constants: { ALL_PROPERTIES, ONLY_ENUMERABLE, kPending, kRejected },
-//   getOwnNonIndexProperties,
-//   getPromiseDetails,
-//   getProxyDetails,
-//   previewEntries,
-//   getConstructorName: internalGetConstructorName,
-//   getExternalValue,
-// } = internalBinding("util");
 import { constants, getOwnNonIndexProperties, previewEntries } from "./util";
 const { ALL_PROPERTIES, ONLY_ENUMERABLE } = constants;
 
@@ -158,8 +149,8 @@ import {
   // isExternal,
   isMap,
   isMapIterator,
-  // isModuleNamespaceObject,
-  // isNativeError,
+  isModuleNamespaceObject,
+  isNativeError,
   isPromise,
   isSet,
   isSetIterator,
@@ -176,21 +167,23 @@ import {
 
 import { assert } from "./internal-assert";
 
-const { BuiltinModule } = require("internal/bootstrap/realm");
-const {
+// const { BuiltinModule } = require("internal/bootstrap/realm");
+import {
   validateObject,
   validateString,
   kValidateObjectAllowArray,
-} = require("internal/validators");
+} from "./internal-validators";
 
 import { hexSlice } from "./hex-slice";
 
-let internalUrl;
-
-function pathToFileUrlHref(filepath) {
-  internalUrl ??= require("internal/url");
-  return internalUrl.pathToFileURL(filepath).href;
-}
+// JB: No way to do this engine-agnostically. References the CWD and depends
+//     upon require.resolve() (which must discern Posix vs. Windows).
+// // let internalUrl;
+// //
+// // function pathToFileUrlHref(filepath: string) {
+// //   internalUrl ??= require("internal/url");
+// //   return internalUrl.pathToFileURL(filepath).href;
+// // }
 
 function isURL(value: unknown) {
   return value instanceof URL;
@@ -204,11 +197,12 @@ const builtInObjects = new SafeSet(
 );
 
 // https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-const isUndetectableObject = (v) => typeof v === "undefined" && v !== undefined;
+const isUndetectableObject = (v: unknown) =>
+  typeof v === "undefined" && v !== undefined;
 
 // These options must stay in sync with `getUserOptions`. So if any option will
 // be added or removed, `getUserOptions` must also be updated accordingly.
-const inspectDefaultOptions = Object.seal({
+export const inspectDefaultOptions = Object.seal({
   showHidden: false,
   depth: 2,
   colors: false,
@@ -434,7 +428,10 @@ const ansi = new RegExp(
   "g",
 );
 
-let getStringWidth: (str: string, removeControlChars?: boolean) => number;
+export let getStringWidth: (
+  str: string,
+  removeControlChars?: boolean,
+) => number;
 
 function getUserOptions(ctx: Context, isCrossContext: boolean) {
   const ret = {
@@ -494,10 +491,13 @@ function getUserOptions(ctx: Context, isCrossContext: boolean) {
  * @param opts Optional options object that alters the output.
  */
 /* Legacy: value, showHidden, depth, colors */
-function inspect(value: unknown, opts?: boolean | Context): string {
+export function inspect(
+  value: unknown,
+  opts?: boolean | Partial<Context>,
+): string {
   // Default options
   const ctx: Context = {
-    budget: {} as Record<string, unknown>,
+    budget: {} as Record<string, number>,
     indentationLvl: 0,
     seen: [],
     currentDepth: 0,
@@ -563,7 +563,7 @@ ObjectDefineProperty(inspect, "defaultOptions", {
   get() {
     return inspectDefaultOptions;
   },
-  set(options) {
+  set(options: unknown) {
     validateObject(options, "options");
     return ObjectAssign(inspectDefaultOptions, options);
   },
@@ -869,28 +869,32 @@ function getConstructorName(
     return null;
   }
 
-  const res = internalGetConstructorName(tmp);
+  // JB: internalGetConstructorName is a v8 method, so we have to simplify here.
+  //
+  // // const res = internalGetConstructorName(tmp);
+  // //
+  // // if (recurseTimes > ctx.depth && ctx.depth !== null) {
+  // //   return `${res} <Complex prototype>`;
+  // // }
+  // //
+  // // const protoConstr = getConstructorName(
+  // //   firstProto,
+  // //   ctx,
+  // //   recurseTimes + 1,
+  // //   protoProps,
+  // // );
+  // //
+  // // if (protoConstr === null) {
+  // //   return `${res} <${inspect(firstProto, {
+  // //     ...ctx,
+  // //     customInspect: false,
+  // //     depth: -1,
+  // //   })}>`;
+  // // }
+  // //
+  // // return `${res} <${protoConstr}>`;
 
-  if (recurseTimes > ctx.depth && ctx.depth !== null) {
-    return `${res} <Complex prototype>`;
-  }
-
-  const protoConstr = getConstructorName(
-    firstProto,
-    ctx,
-    recurseTimes + 1,
-    protoProps,
-  );
-
-  if (protoConstr === null) {
-    return `${res} <${inspect(firstProto, {
-      ...ctx,
-      customInspect: false,
-      depth: -1,
-    })}>`;
-  }
-
-  return `${res} <${protoConstr}>`;
+  return "<uninspectable>";
 }
 
 // This function has the side effect of adding prototype properties to the
@@ -1024,12 +1028,13 @@ function getKeys(
 
 function getCtxStyle(value: unknown, constructor: string | null, tag: string) {
   let fallback = "";
-  if (constructor === null) {
-    fallback = internalGetConstructorName(value);
-    if (fallback === tag) {
-      fallback = "Object";
-    }
-  }
+  // JB: internalGetConstructorName() is v8-specific
+  // // if (constructor === null) {
+  // //   fallback = internalGetConstructorName(value);
+  // //   if (fallback === tag) {
+  // //     fallback = "Object";
+  // //   }
+  // // }
   return getPrefix(constructor, tag, fallback);
 }
 
@@ -1073,7 +1078,11 @@ function formatValue(
     typeof value !== "function" &&
     !isUndetectableObject(value)
   ) {
-    return formatPrimitive(ctx.stylize, value, ctx);
+    return formatPrimitive(
+      ctx.stylize,
+      value as string | number | bigint | boolean | undefined | symbol,
+      ctx,
+    );
   }
   if (value === null) {
     return ctx.stylize("null", "null");
@@ -1656,7 +1665,7 @@ function getFunctionBase(
   return base;
 }
 
-function identicalSequenceRange<T>(a: Array<T>, b: Array<T>) {
+export function identicalSequenceRange<T>(a: Array<T>, b: Array<T>) {
   for (let i = 0; i < a.length - 3; i++) {
     // Find the first entry of b that matches the current entry of a.
     const pos = ArrayPrototypeIndexOf(b, a[i]);
@@ -1848,15 +1857,17 @@ function markCwd(ctx: Context, line: string, workingDirectory: string) {
   return tempLine;
 }
 
-function safeGetCWD() {
-  let workingDirectory;
-  try {
-    workingDirectory = process.cwd();
-  } catch {
-    return;
-  }
-  return workingDirectory;
-}
+// JB: Not engine-agnostic.
+//
+// // function safeGetCWD() {
+// //   let workingDirectory;
+// //   try {
+// //     workingDirectory = process.cwd();
+// //   } catch {
+// //     return;
+// //   }
+// //   return workingDirectory;
+// // }
 
 function formatError(
   err: Error,
@@ -1898,33 +1909,36 @@ function formatError(
     let newStack = StringPrototypeSlice(stack, 0, stackStart);
     const stackFramePart = StringPrototypeSlice(stack, stackStart + 1);
     const lines = getStackFrames(ctx, err, stackFramePart);
-    if (ctx.colors) {
-      // Highlight userland code and node modules.
-      const workingDirectory = safeGetCWD();
-      let esmWorkingDirectory;
-      for (let line of lines) {
-        const core = RegExpPrototypeExec(coreModuleRegExp, line);
-        if (core !== null && BuiltinModule.exists(core[1])) {
-          newStack += `\n${ctx.stylize(line, "undefined")}`;
-        } else {
-          newStack += "\n";
+    // JB: No way to do this engine-agnostically. References the CWD and depends
+    //     upon require.resolve() (which must discern Posix vs. Windows).
+    // // if (ctx.colors) {
+    //   // Highlight userland code and node modules.
+    //   const workingDirectory = safeGetCWD();
+    //   let esmWorkingDirectory;
+    //   for (let line of lines) {
+    //     const core = RegExpPrototypeExec(coreModuleRegExp, line);
+    //     if (core !== null && BuiltinModule.exists(core[1])) {
+    //       newStack += `\n${ctx.stylize(line, "undefined")}`;
+    //     } else {
+    //       newStack += "\n";
 
-          line = markNodeModules(ctx, line);
-          if (workingDirectory !== undefined) {
-            let newLine = markCwd(ctx, line, workingDirectory);
-            if (newLine === line) {
-              esmWorkingDirectory ??= pathToFileUrlHref(workingDirectory);
-              newLine = markCwd(ctx, line, esmWorkingDirectory);
-            }
-            line = newLine;
-          }
+    //       line = markNodeModules(ctx, line);
+    //       if (workingDirectory !== undefined) {
+    //         let newLine = markCwd(ctx, line, workingDirectory);
+    //         if (newLine === line) {
+    //           esmWorkingDirectory ??= pathToFileUrlHref(workingDirectory);
+    //           newLine = markCwd(ctx, line, esmWorkingDirectory);
+    //         }
+    //         line = newLine;
+    //       }
 
-          newStack += line;
-        }
-      }
-    } else {
-      newStack += `\n${ArrayPrototypeJoin(lines, "\n")}`;
-    }
+    //       newStack += line;
+    //     }
+    //   }
+    // // } else {
+    // //   newStack += `\n${ArrayPrototypeJoin(lines, "\n")}`;
+    // // }
+    newStack += `\n${ArrayPrototypeJoin(lines, "\n")}`;
     stack = newStack;
   }
   // The message and the stack have to be indented as well!
@@ -1936,7 +1950,11 @@ function formatError(
   return stack;
 }
 
-function groupArrayElements(ctx: Context, output: Array<string>, value) {
+function groupArrayElements(
+  ctx: Context,
+  output: Array<string>,
+  value: Array<unknown>,
+) {
   let totalLength = 0;
   let maxLength = 0;
   let i = 0;
@@ -1984,7 +2002,7 @@ function groupArrayElements(ctx: Context, output: Array<string>, value) {
       MathFloor((ctx.breakLength - ctx.indentationLvl) / actualMax),
       // Limit array grouping for small `compact` modes as the user requested
       // minimal grouping.
-      ctx.compact * 4,
+      (ctx.compact as number) * 4,
       // Limit the columns to a maximum of fifteen.
       15,
     );
@@ -2168,46 +2186,48 @@ function formatPrimitive(
   return fn(SymbolPrototypeToString(value), "symbol");
 }
 
-function formatNamespaceObject(
-  keys: Array<string>,
-  ctx: Context,
-  value,
-  recurseTimes: number,
-) {
-  const output = new Array(keys.length);
-  for (let i = 0; i < keys.length; i++) {
-    try {
-      output[i] = formatProperty(
-        ctx,
-        value,
-        recurseTimes,
-        keys[i],
-        kObjectType,
-      );
-    } catch (err) {
-      assert(isNativeError(err) && (err as Error).name === "ReferenceError");
-      // Use the existing functionality. This makes sure the indentation and
-      // line breaks are always correct. Otherwise it is very difficult to keep
-      // this aligned, even though this is a hacky way of dealing with this.
-      const tmp = { [keys[i]]: "" };
-      output[i] = formatProperty(ctx, tmp, recurseTimes, keys[i], kObjectType);
-      const pos = StringPrototypeLastIndexOf(output[i], " ");
-      // We have to find the last whitespace and have to replace that value as
-      // it will be visualized as a regular string.
-      output[i] =
-        StringPrototypeSlice(output[i], 0, pos + 1) +
-        ctx.stylize("<uninitialized>", "special");
-    }
-  }
-  // Reset the keys to an empty array. This prevents duplicated inspection.
-  keys.length = 0;
-  return output;
-}
+// JB: Not used
+//
+// // function formatNamespaceObject(
+// //   keys: Array<string>,
+// //   ctx: Context,
+// //   value: Record<string, unknown>,
+// //   recurseTimes: number,
+// // ) {
+// //   const output = new Array(keys.length);
+// //   for (let i = 0; i < keys.length; i++) {
+// //     try {
+// //       output[i] = formatProperty(
+// //         ctx,
+// //         value,
+// //         recurseTimes,
+// //         keys[i],
+// //         kObjectType,
+// //       );
+// //     } catch (err) {
+// //       assert(isNativeError(err) && (err as Error).name === "ReferenceError");
+// //       // Use the existing functionality. This makes sure the indentation and
+// //       // line breaks are always correct. Otherwise it is very difficult to keep
+// //       // this aligned, even though this is a hacky way of dealing with this.
+// //       const tmp = { [keys[i]]: "" };
+// //       output[i] = formatProperty(ctx, tmp, recurseTimes, keys[i], kObjectType);
+// //       const pos = StringPrototypeLastIndexOf(output[i], " ");
+// //       // We have to find the last whitespace and have to replace that value as
+// //       // it will be visualized as a regular string.
+// //       output[i] =
+// //         StringPrototypeSlice(output[i], 0, pos + 1) +
+// //         ctx.stylize("<uninitialized>", "special");
+// //     }
+// //   }
+// //   // Reset the keys to an empty array. This prevents duplicated inspection.
+// //   keys.length = 0;
+// //   return output;
+// // }
 
 // The array is sparse and/or has extra keys
 function formatSpecialArray(
   ctx: Context,
-  value: Record<string, unknown>,
+  value: Array<unknown> | Record<number, unknown>,
   recurseTimes: number,
   maxLength: number,
   output: Array<string>,
@@ -2237,11 +2257,17 @@ function formatSpecialArray(
     }
     ArrayPrototypePush(
       output,
-      formatProperty(ctx, value, recurseTimes, key, kArrayType),
+      formatProperty(
+        ctx,
+        value as Record<number, unknown>,
+        recurseTimes,
+        key,
+        kArrayType,
+      ),
     );
     index++;
   }
-  const remaining = value.length - index;
+  const remaining = (value as Array<unknown>).length - index;
   if (output.length !== maxLength) {
     if (remaining > 0) {
       const ending = remaining > 1 ? "s" : "";
@@ -2298,7 +2324,13 @@ function formatArray(
     }
     ArrayPrototypePush(
       output,
-      formatProperty(ctx, value, recurseTimes, i, kArrayType),
+      formatProperty(
+        ctx,
+        value as Record<number, unknown>,
+        recurseTimes,
+        i,
+        kArrayType,
+      ),
     );
   }
   if (remaining > 0) {
@@ -2308,7 +2340,18 @@ function formatArray(
 }
 
 function formatTypedArray(
-  value,
+  value:
+    | Int8Array<ArrayBufferLike>
+    | Uint8Array<ArrayBufferLike>
+    | Uint8ClampedArray<ArrayBufferLike>
+    | Int16Array<ArrayBufferLike>
+    | Uint16Array<ArrayBufferLike>
+    | Int32Array<ArrayBufferLike>
+    | Uint32Array<ArrayBufferLike>
+    | Float32Array<ArrayBufferLike>
+    | Float64Array<ArrayBufferLike>
+    | BigInt64Array<ArrayBufferLike>
+    | BigUint64Array<ArrayBufferLike>,
   length: number,
   ctx: Context,
   ignored: null,
@@ -2322,7 +2365,11 @@ function formatTypedArray(
       ? formatNumber
       : formatBigInt;
   for (let i = 0; i < maxLength; ++i) {
-    output[i] = elementFormatter(ctx.stylize, value[i], ctx.numericSeparator);
+    output[i] = elementFormatter(
+      ctx.stylize,
+      value[i] as number & BigInt,
+      ctx.numericSeparator,
+    );
   }
   if (remaining > 0) {
     output[maxLength] = remainingText(remaining);
@@ -2338,6 +2385,7 @@ function formatTypedArray(
       "byteOffset",
       "buffer",
     ]) {
+      // @ts-ignore
       const str = formatValue(ctx, value[key], recurseTimes, true);
       ArrayPrototypePush(output, `[${key}]: ${str}`);
     }
@@ -2355,7 +2403,7 @@ function formatSet(
   const length = value.size;
   const maxLength = MathMin(MathMax(0, ctx.maxArrayLength), length);
   const remaining = length - maxLength;
-  const output = [];
+  const output = new Array<string>();
   ctx.indentationLvl += 2;
   let i = 0;
   for (const v of value) {
@@ -2491,7 +2539,7 @@ function formatWeakCollection(ctx: Context) {
 function formatIterator(
   braces: Braces,
   ctx: Context,
-  value,
+  value: Iterator<unknown>,
   recurseTimes: number,
 ) {
   const { 0: entries, 1: isKeyValue } = previewEntries(value, true);
@@ -2509,7 +2557,7 @@ function formatIterator(
   return formatSetIterInner(ctx, recurseTimes, entries, kIterator);
 }
 
-function formatPromise(ctx: Context, value, recurseTimes: number) {
+function formatPromise(ctx: Context, value: unknown, recurseTimes: number) {
   // JB: It's impossible to synchronously inspect a Promise's state in an
   //     engine-agnostic fashion.
   //
@@ -2535,7 +2583,7 @@ function formatProperty(
   ctx: Context,
   value: Record<string, unknown>,
   recurseTimes: number,
-  key: string | symbol,
+  key: number | string | symbol,
   type: Extras,
   desc?: PropertyDescriptor,
   original = value,
@@ -2598,10 +2646,13 @@ function formatProperty(
       escapeFn,
     );
     name = ctx.stylize(tmp, "symbol");
-  } else if (RegExpPrototypeExec(keyStrRegExp, key) !== null) {
-    name = key === "__proto__" ? "['__proto__']" : ctx.stylize(key, "name");
+  } else if (RegExpPrototypeExec(keyStrRegExp, key as string) !== null) {
+    name =
+      key === "__proto__"
+        ? "['__proto__']"
+        : ctx.stylize(key as string, "name");
   } else {
-    name = ctx.stylize(strEscape(key), "string");
+    name = ctx.stylize(strEscape(key as string), "string");
   }
 
   if (desc.enumerable === false) {
@@ -2610,7 +2661,12 @@ function formatProperty(
   return `${name}:${extra}${str}`;
 }
 
-function isBelowBreakLength(ctx: Context, output, start, base) {
+function isBelowBreakLength(
+  ctx: Context,
+  output: Array<string>,
+  start: number,
+  base: string,
+) {
   // Each entry is separated by at least a comma. Thus, we start with a total
   // length of at least `output.length`. In addition, some cases have a
   // whitespace in-between each other that is added to the total as well.
@@ -2635,7 +2691,7 @@ function isBelowBreakLength(ctx: Context, output, start, base) {
 
 function reduceToSingleString(
   ctx: Context,
-  output,
+  output: Array<string>,
   base: string,
   braces: Braces,
   extrasType: Extras,
@@ -2650,7 +2706,7 @@ function reduceToSingleString(
       // Group array elements together if the array contains at least six
       // separate entries.
       if (extrasType === kArrayExtrasType && entries > 6) {
-        output = groupArrayElements(ctx, output, value);
+        output = groupArrayElements(ctx, output, value as Array<unknown>);
       }
       // `ctx.currentDepth` is set to the most inner depth of the currently
       // inspected object part while `recurseTimes` is the actual current depth
@@ -2787,7 +2843,7 @@ function tryStringify(arg: unknown) {
     if (!CIRCULAR_ERROR_MESSAGE) {
       try {
         const a = {};
-        a.a = a;
+        (a as any).a = a;
         JSONStringify(a);
       } catch (circularError) {
         CIRCULAR_ERROR_MESSAGE = firstErrorLine(circularError as Error);
@@ -2803,11 +2859,11 @@ function tryStringify(arg: unknown) {
   }
 }
 
-function format(...args: Array<unknown>) {
+export function format(...args: Array<unknown>) {
   return formatWithOptionsInternal(undefined, args);
 }
 
-function formatWithOptions(
+export function formatWithOptions(
   inspectOptions: Context | undefined,
   ...args: Array<unknown>
 ) {
@@ -2869,7 +2925,7 @@ function formatWithOptionsInternal(
               } else if (
                 typeof tempArg !== "object" ||
                 tempArg === null ||
-                !hasBuiltInToString(tempArg)
+                !hasBuiltInToString(tempArg as Record<string, unknown>)
               ) {
                 tempStr = String(tempArg);
               } else {
@@ -2917,7 +2973,7 @@ function formatWithOptionsInternal(
                 tempStr = "NaN";
               } else {
                 tempStr = formatNumberNoColor(
-                  NumberParseInt(tempInteger),
+                  NumberParseInt(tempInteger as string),
                   inspectOptions,
                 );
               }
@@ -2930,7 +2986,7 @@ function formatWithOptionsInternal(
                 tempStr = "NaN";
               } else {
                 tempStr = formatNumberNoColor(
-                  NumberParseFloat(tempFloat),
+                  NumberParseFloat(tempFloat as string),
                   inspectOptions,
                 );
               }
@@ -2977,7 +3033,7 @@ function formatWithOptionsInternal(
   return str;
 }
 
-function isZeroWidthCodePoint(code: number) {
+export function isZeroWidthCodePoint(code: number) {
   return (
     code <= 0x1f || // C0 control codes
     (code >= 0x7f && code <= 0x9f) || // C1 control codes
@@ -2991,37 +3047,41 @@ function isZeroWidthCodePoint(code: number) {
   ); // Variation Selectors
 }
 
-if (internalBinding("config").hasIntl) {
-  const icu = internalBinding("icu");
-  // icu.getStringWidth(string, ambiguousAsFullWidth, expandEmojiSequence)
-  // Defaults: ambiguousAsFullWidth = false; expandEmojiSequence = true;
-  // TODO(BridgeAR): Expose the options to the user. That is probably the
-  // best thing possible at the moment, since it's difficult to know what
-  // the receiving end supports.
-  getStringWidth = function getStringWidth(
-    str: string,
-    removeControlChars = true,
-  ) {
-    let width = 0;
-
-    if (removeControlChars) {
-      str = stripVTControlCharacters(str);
-    }
-    for (let i = 0; i < str.length; i++) {
-      // Try to avoid calling into C++ by first handling the ASCII portion of
-      // the string. If it is fully ASCII, we skip the C++ part.
-      const code = str.charCodeAt(i);
-      if (code >= 127) {
-        width += icu.getStringWidth(
-          StringPrototypeNormalize(StringPrototypeSlice(str, i), "NFC"),
-        );
-        break;
-      }
-      width += code >= 32 ? 1 : 0;
-    }
-    return width;
-  };
-} else {
+// JB: Internal bindings are a Node.js / V8 concept, and Intl is often omitted
+//     by engines anyway, due to its size.
+//
+// // if (internalBinding("config").hasIntl) {
+// //   const icu = internalBinding("icu");
+// //   // icu.getStringWidth(string, ambiguousAsFullWidth, expandEmojiSequence)
+// //   // Defaults: ambiguousAsFullWidth = false; expandEmojiSequence = true;
+// //   // TODO(BridgeAR): Expose the options to the user. That is probably the
+// //   // best thing possible at the moment, since it's difficult to know what
+// //   // the receiving end supports.
+// //   getStringWidth = function getStringWidth(
+// //     str: string,
+// //     removeControlChars = true,
+// //   ) {
+// //     let width = 0;
+//
+// //     if (removeControlChars) {
+// //       str = stripVTControlCharacters(str);
+// //     }
+// //     for (let i = 0; i < str.length; i++) {
+// //       // Try to avoid calling into C++ by first handling the ASCII portion of
+// //       // the string. If it is fully ASCII, we skip the C++ part.
+// //       const code = str.charCodeAt(i);
+// //       if (code >= 127) {
+// //         width += icu.getStringWidth(
+// //           StringPrototypeNormalize(StringPrototypeSlice(str, i), "NFC"),
+// //         );
+// //         break;
+// //       }
+// //       width += code >= 32 ? 1 : 0;
+// //     }
+// //     return width;
+// //   };
+// // } else
+{
   /**
    * Returns the number of columns required to display the given string.
    */
@@ -3089,24 +3149,14 @@ if (internalBinding("config").hasIntl) {
 /**
  * Remove all VT control characters. Use to estimate displayed string width.
  */
-function stripVTControlCharacters(str) {
+export function stripVTControlCharacters(str: string) {
   validateString(str, "str");
 
+  // @ts-ignore
   return RegExpPrototypeSymbolReplace(ansi, str, "");
 }
 
-module.exports = {
-  identicalSequenceRange,
-  inspect,
-  inspectDefaultOptions,
-  format,
-  formatWithOptions,
-  getStringWidth,
-  stripVTControlCharacters,
-  isZeroWidthCodePoint,
-};
-
-interface Context {
+export interface Context {
   circular?: Map<unknown, unknown>;
   budget: Record<string, number>;
   indentationLvl: number;

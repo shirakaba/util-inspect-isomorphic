@@ -1,3 +1,26 @@
+import { ReflectApply } from "./primordials";
+
+/**
+ * This function removes unnecessary frames from Node.js core errors.
+ */
+export function hideStackFrames<T extends (...args: Array<any>) => any>(
+  fn: T,
+): T {
+  function wrappedFn(...args: Array<unknown>) {
+    try {
+      // @ts-ignore
+      return ReflectApply(fn, this, args);
+    } catch (error) {
+      "stackTraceLimit" in Error &&
+        Error.stackTraceLimit &&
+        Error.captureStackTrace(error, wrappedFn);
+      throw error;
+    }
+  }
+  wrappedFn.withoutStackTrace = fn;
+  return wrappedFn as unknown as T;
+}
+
 let maxStack_ErrorName: string;
 let maxStack_ErrorMessage: string;
 

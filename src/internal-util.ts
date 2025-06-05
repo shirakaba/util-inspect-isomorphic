@@ -20,7 +20,7 @@ export function isError(e: unknown) {
  * "The built-in Array#join is slower in v8 6.0"
  * @see https://github.com/nodejs/node/blob/1093f38c437c44589c9962d3156540036d0717bd/lib/internal/util.js#L518C1-L530C2
  */
-export function join(output: string, separator: string) {
+export function join(output: Array<string>, separator: string) {
   let str = "";
   if (output.length !== 0) {
     const lastIndex = output.length - 1;
