@@ -1,4 +1,4 @@
-import { StringPrototypeReplace } from "./primordials";
+import { StringPrototypeReplace } from "./primordials.js";
 
 const colorRegExp = /\u001b\[\d\d?m/g;
 

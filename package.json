@@ -1,6 +1,19 @@
 {
   "name": "util-inspect-isomorphic",
   "version": "0.0.1",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE-node.txt",
+    "LICENSE-node-primordials.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node scripts/test.js",
+    "prepublishOnly": "node --run build"
+  },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",
     "@eslint/js": "^9.27.0",

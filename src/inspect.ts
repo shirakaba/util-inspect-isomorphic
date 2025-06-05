@@ -1,4 +1,4 @@
-import { primordials } from "./primordials";
+import { primordials } from "./primordials.js";
 const {
   Array,
   ArrayBuffer,
@@ -126,7 +126,7 @@ const {
   // uncurryThis,
 } = primordials;
 
-import { constants, getOwnNonIndexProperties, previewEntries } from "./util";
+import { constants, getOwnNonIndexProperties, previewEntries } from "./util.js";
 const { ALL_PROPERTIES, ONLY_ENUMERABLE } = constants;
 
 import {
@@ -134,9 +134,9 @@ import {
   customInspectSymbol,
   join,
   removeColors,
-} from "./internal-util";
+} from "./internal-util.js";
 
-import { isStackOverflowError } from "./internal-errors";
+import { isStackOverflowError } from "./internal-errors.js";
 
 import {
   isAsyncFunction,
@@ -163,18 +163,18 @@ import {
   isNumberObject,
   isBooleanObject,
   isBigIntObject,
-} from "./internal-util-types";
+} from "./internal-util-types.js";
 
-import { assert } from "./internal-assert";
+import { assert } from "./internal-assert.js";
 
 // const { BuiltinModule } = require("internal/bootstrap/realm");
 import {
   validateObject,
   validateString,
   kValidateObjectAllowArray,
-} from "./internal-validators";
+} from "./internal-validators.js";
 
-import { hexSlice } from "./hex-slice";
+import { hexSlice } from "./hex-slice.js";
 
 // JB: No way to do this engine-agnostically. References the CWD and depends
 //     upon require.resolve() (which must discern Posix vs. Windows).

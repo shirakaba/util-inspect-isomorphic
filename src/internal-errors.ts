@@ -1,4 +1,4 @@
-import { ReflectApply } from "./primordials";
+import { ReflectApply } from "./primordials.js";
 
 /**
  * This function removes unnecessary frames from Node.js core errors.

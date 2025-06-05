@@ -1,5 +1,5 @@
-import { hideStackFrames } from "./internal-errors";
-import { ArrayIsArray } from "./primordials";
+import { hideStackFrames } from "./internal-errors.js";
+import { ArrayIsArray } from "./primordials.js";
 
 export const validateString: (
   value: unknown,

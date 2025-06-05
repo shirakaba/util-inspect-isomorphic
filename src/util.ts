@@ -1,4 +1,5 @@
-import { isSetIterator, isMapIterator } from "./internal-util-types";
+/// <reference path="./error-capture-stack-trace.types.ts" />
+import { isSetIterator, isMapIterator } from "./internal-util-types.js";
 
 // https://github.com/nodejs/node/blob/919ef7cae89ea9821db041cde892697cc8030b7c/src/node_util.cc#L52
 // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/api/api.cc;l=4732?q=GetPropertyNames&sq=&ss=chromium%2Fchromium%2Fsrc:v8%2F

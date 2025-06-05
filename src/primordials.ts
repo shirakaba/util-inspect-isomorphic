@@ -629,7 +629,7 @@ const SafeStringIterator = createSafeIterator(
   StringPrototypeSymbolIterator,
   // @ts-ignore Works in JS
   StringIteratorPrototypeNext,
-);
+) as { new (string: string): StringIterator<string> };
 const SafeMap = makeSafe(
   Map,
   class SafeMap<K, V> extends Map<K, V> {
