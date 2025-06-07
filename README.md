@@ -17,20 +17,36 @@ Use just like the original (see the official Node.js [docs](https://nodejs.org/a
 ```js
 import { inspect } from "util-inspect-isomorphic";
 
-// Serialise Errors with cause:
+// ⭐️ Serialise Errors with cause ⭐️
 console.error(inspect(new Error("Outer", { cause: new Error("Inner") })));
+// Error: Outer
+//     at file:///Users/shirakaba/demo.js:4:23
+//     at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+//     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+//     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+//   [cause]: Error: Inner
+//       at file:///Users/shirakaba/demo.js:4:51
+//       at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+//       at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+//       at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+// }
 
-// Inspect deeply-nested objects:
-console.log(inspect({ a: { b: { c: { d: {} } } } }), { depth: null });
+// ⭐️ Inspect deeply-nested objects ⭐️
+console.log(inspect({ a: { b: { c: { d: {} } } } }, { depth: null }));
+// {
+//   a: { b: { c: { d: {} } } }
+// }
 
-// Print with colours:
+// ⭐️ Print with colours ⭐️
 console.log(inspect(["wow", new Date(), true], { colors: true }));
+// [ 'wow', 2025-06-07T11:35:11.755Z, true ]
 
-// Insert an underscore between every 3 digits:
+// ⭐️ Insert an underscore between every 3 digits ⭐️
 console.log(inspect(1000000000, { numericSeparator: true }));
+// 1_000_000_000
 ```
 
-For an example, see how we can use this in React Native to log `Error.cause` properly:
+See how we can use this in React Native to upgrade the logging of `Error.cause`:
 
 ![Example of logging Error.cause](.github/log-error-cause.png)
 
