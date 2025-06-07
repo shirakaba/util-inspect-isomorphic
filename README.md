@@ -30,6 +30,10 @@ console.log(inspect(["wow", new Date(), true], { colors: true }));
 console.log(inspect(1000000000, { numericSeparator: true }));
 ```
 
+For an example, see how we can use this in React Native to log `Error.cause` properly:
+
+![Example of logging Error.cause](.github/log-error-cause.png)
+
 # Engine support
 
 Requires ES6 and ESM support (or a bundler that can downlevel them).
