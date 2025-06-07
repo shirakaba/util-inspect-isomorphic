@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "test": "node scripts/test.js",
-    "prepublishOnly": "node --run build"
+    "prepack": "node --run build"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",

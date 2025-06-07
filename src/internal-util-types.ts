@@ -1,12 +1,19 @@
 /**
- * JB: No way to do this engine-agnostically, so just return false.
+ * TODO: Refer to how `node-inspect-extracted` handles this. I hadn't understood
+ * at first that "native error" refers to ECMAScript `NativeError`, rather than
+ * non-standard V8/Node.js errors, so this should be surmountable.
+ *
+ * @see https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/internal/util/types.js#L150
+ * @see https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-native-error-types-used-in-this-standard
  */
 export function isNativeError(value: unknown): value is Error {
   return false;
 }
 
 /**
- * JB: No way to do this engine-agnostically, so just return false.
+ * TODO: Refer to how `node-inspect-extracted` handles this.
+ *
+ * @see https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/internal/util/types.js#L144
  */
 export function isModuleNamespaceObject(value: unknown): value is any {
   return false;
@@ -14,6 +21,10 @@ export function isModuleNamespaceObject(value: unknown): value is any {
 
 /**
  * JB: No way to do this engine-agnostically, so just return false.
+ *
+ * TODO: Refer to how `node-inspect-extracted` handles this.
+ *
+ * @see https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/internal/util/types.js#L124
  */
 export function isExternal(value: unknown): value is any {
   return false;
@@ -145,6 +156,10 @@ export function isDate(value: unknown) {
 
 export function isTypedArray(value: unknown) {
   // There is no "TypedArray" global exposed to JavaScript.
+
+  // Nice how `node-inspect-extracted` uses constructor names rather than
+  // `instanceof` to handle the engine not implementing the type.
+  // https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/internal/util/types.js#L201
   return (
     value instanceof Int8Array ||
     value instanceof Uint8Array ||

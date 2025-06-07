@@ -1,6 +1,10 @@
 import { primordials } from "./primordials.js";
 
-import { constants, getOwnNonIndexProperties, previewEntries } from "./util.js";
+import {
+  constants,
+  getOwnNonIndexProperties,
+  previewEntries,
+} from "./node-util.js";
 const { ALL_PROPERTIES, ONLY_ENUMERABLE } = constants;
 
 import {
@@ -1754,65 +1758,67 @@ function removeDuplicateErrorKeys(
   }
 }
 
-function markNodeModules(ctx: Context, line: string) {
-  let tempLine = "";
-  let nodeModule;
-  let pos = 0;
-  while ((nodeModule = nodeModulesRegExp.exec(line)) !== null) {
-    // '/node_modules/'.length === 14
-    tempLine += primordials.StringPrototypeSlice(
-      line,
-      pos,
-      nodeModule.index + 14,
-    );
-    tempLine += ctx.stylize(nodeModule[1], "module");
-    pos = nodeModule.index + nodeModule[0].length;
-  }
-  if (pos !== 0) {
-    line = tempLine + primordials.StringPrototypeSlice(line, pos);
-  }
-  return line;
-}
-
-function markCwd(ctx: Context, line: string, workingDirectory: string) {
-  let cwdStartPos = primordials.StringPrototypeIndexOf(line, workingDirectory);
-  let tempLine = "";
-  let cwdLength = workingDirectory.length;
-  if (cwdStartPos !== -1) {
-    if (
-      primordials.StringPrototypeSlice(line, cwdStartPos - 7, cwdStartPos) ===
-      "file://"
-    ) {
-      cwdLength += 7;
-      cwdStartPos -= 7;
-    }
-    const start = line[cwdStartPos - 1] === "(" ? cwdStartPos - 1 : cwdStartPos;
-    const end =
-      start !== cwdStartPos && primordials.StringPrototypeEndsWith(line, ")")
-        ? -1
-        : line.length;
-    const workingDirectoryEndPos = cwdStartPos + cwdLength + 1;
-    const cwdSlice = primordials.StringPrototypeSlice(
-      line,
-      start,
-      workingDirectoryEndPos,
-    );
-
-    tempLine += primordials.StringPrototypeSlice(line, 0, start);
-    tempLine += ctx.stylize(cwdSlice, "undefined");
-    tempLine += primordials.StringPrototypeSlice(
-      line,
-      workingDirectoryEndPos,
-      end,
-    );
-    if (end === -1) {
-      tempLine += ctx.stylize(")", "undefined");
-    }
-  } else {
-    tempLine += line;
-  }
-  return tempLine;
-}
+// JB: Used for coloured stacks, which requires CWD
+//
+// // function markNodeModules(ctx: Context, line: string) {
+// //   let tempLine = "";
+// //   let nodeModule;
+// //   let pos = 0;
+// //   while ((nodeModule = nodeModulesRegExp.exec(line)) !== null) {
+// //     // '/node_modules/'.length === 14
+// //     tempLine += primordials.StringPrototypeSlice(
+// //       line,
+// //       pos,
+// //       nodeModule.index + 14,
+// //     );
+// //     tempLine += ctx.stylize(nodeModule[1], "module");
+// //     pos = nodeModule.index + nodeModule[0].length;
+// //   }
+// //   if (pos !== 0) {
+// //     line = tempLine + primordials.StringPrototypeSlice(line, pos);
+// //   }
+// //   return line;
+// // }
+// //
+// // function markCwd(ctx: Context, line: string, workingDirectory: string) {
+// //   let cwdStartPos = primordials.StringPrototypeIndexOf(line, workingDirectory);
+// //   let tempLine = "";
+// //   let cwdLength = workingDirectory.length;
+// //   if (cwdStartPos !== -1) {
+// //     if (
+// //       primordials.StringPrototypeSlice(line, cwdStartPos - 7, cwdStartPos) ===
+// //       "file://"
+// //     ) {
+// //       cwdLength += 7;
+// //       cwdStartPos -= 7;
+// //     }
+// //     const start = line[cwdStartPos - 1] === "(" ? cwdStartPos - 1 : cwdStartPos;
+// //     const end =
+// //       start !== cwdStartPos && primordials.StringPrototypeEndsWith(line, ")")
+// //         ? -1
+// //         : line.length;
+// //     const workingDirectoryEndPos = cwdStartPos + cwdLength + 1;
+// //     const cwdSlice = primordials.StringPrototypeSlice(
+// //       line,
+// //       start,
+// //       workingDirectoryEndPos,
+// //     );
+// //
+// //     tempLine += primordials.StringPrototypeSlice(line, 0, start);
+// //     tempLine += ctx.stylize(cwdSlice, "undefined");
+// //     tempLine += primordials.StringPrototypeSlice(
+// //       line,
+// //       workingDirectoryEndPos,
+// //       end,
+// //     );
+// //     if (end === -1) {
+// //       tempLine += ctx.stylize(")", "undefined");
+// //     }
+// //   } else {
+// //     tempLine += line;
+// //   }
+// //   return tempLine;
+// // }
 
 // JB: Not engine-agnostic.
 //
@@ -1883,7 +1889,7 @@ function formatError(
     //       newStack += `\n${ctx.stylize(line, "undefined")}`;
     //     } else {
     //       newStack += "\n";
-
+    //
     //       line = markNodeModules(ctx, line);
     //       if (workingDirectory !== undefined) {
     //         let newLine = markCwd(ctx, line, workingDirectory);
@@ -1893,14 +1899,13 @@ function formatError(
     //         }
     //         line = newLine;
     //       }
-
+    //
     //       newStack += line;
     //     }
     //   }
     // // } else {
-    // //   newStack += `\n${primordials.ArrayPrototypeJoin(lines, "\n")}`;
-    // // }
     newStack += `\n${primordials.ArrayPrototypeJoin(lines, "\n")}`;
+    // // }
     stack = newStack;
   }
   // The message and the stack have to be indented as well!
@@ -2161,7 +2166,7 @@ function formatPrimitive(
   return fn(primordials.SymbolPrototypeToString(value), "symbol");
 }
 
-// JB: Not used
+// JB: Used only for module namespace objects, which we don't yet support.
 //
 // // function formatNamespaceObject(
 // //   keys: Array<string>,
