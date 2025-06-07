@@ -16,7 +16,6 @@ An isomorphic port of a Node.js API, [require("node:util").inspect()](https://no
 
 Here's a file-by-file summary of what was ported:
 
-```
 - [src/error-capture-stack-trace.types.ts](./src/error-capture-stack-trace.types.ts): Typings for the non-standard `ErrorConstructor.captureStackTrace`, from https://github.com/microsoft/TypeScript/issues/3926#issuecomment-169096154.
 - [src/hex-slice.ts](./src/hex-slice.ts): Original implementation based on the behaviour of `require('buffer').Buffer.prototype.hexSlice`
 - [src/index.ts](./src/index.ts): [lib/internal/util.js](https://github.com/nodejs/node/blob/main/lib/internal/util.js)
@@ -30,7 +29,6 @@ Here's a file-by-file summary of what was ported:
 - [src/primordials.ts](./src/primordials.ts): https://github.com/isaacs/node-primordials/blob/main/src/index.ts, itself a TypeScript port of [lib/internal/per_context/primordials.js](https://github.com/nodejs/node/blob/main/lib/internal/per_context/primordials.js)
 - [src/node-util.ts](./src/node-util.ts): [src/node_util.cc](https://github.com/nodejs/node/blob/main/src/node_util.cc)
   - Some code reused from [node-inspect-extracted](https://github.com/hildjj/node-inspect-extracted/blob/main/src/util.js), as per the code comments.
-```
 
 # See also
 
