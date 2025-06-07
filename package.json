@@ -2,7 +2,7 @@
   "name": "util-inspect-isomorphic",
   "version": "1.0.0",
   "author": "Jamie Birch <14055146+shirakaba@users.noreply.github.com>",
-  "description": "An isomorphic port of Node.js require('node:util').inspect().",
+  "description": "An isomorphic port of the Node.js API require('node:util').inspect().",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node scripts/test.js",
+    "test": "node scripts/test-error-cause.js",
     "prepack": "node --run build"
   },
   "repository": {
