@@ -1,41 +1,42 @@
 /// <reference path="./error-capture-stack-trace.types.ts" />
 import { isSetIterator, isMapIterator } from "./internal-util-types.js";
 
+// Initially written with reference to the original implementation:
 // https://github.com/nodejs/node/blob/919ef7cae89ea9821db041cde892697cc8030b7c/src/node_util.cc#L52
 // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/api/api.cc;l=4732?q=GetPropertyNames&sq=&ss=chromium%2Fchromium%2Fsrc:v8%2F
+//
+// ... Then simply replaced with the `node-inspect-extracted` implementation
+// once I remembered I'd overlooked the "non-index" part:
+// https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/util.js#L21
 export function getOwnNonIndexProperties(
   value: unknown,
-  filter: PropertyFilter,
+  filter = PropertyFilter.ONLY_ENUMERABLE,
 ) {
-  if (typeof value !== "object" || value === null) {
-    throw new TypeError("First argument must be an object");
-  }
+  const desc = Object.getOwnPropertyDescriptors(value);
+  const ret = new Array<string | symbol>();
 
-  if (typeof filter !== "number") {
-    throw new TypeError("Second argument must be a number");
-  }
-
-  const ownProperties = [
-    ...Object.getOwnPropertyNames(value),
-    ...Object.getOwnPropertySymbols(value),
-  ];
-
-  switch (filter) {
-    case PropertyFilter.ALL_PROPERTIES: {
-      return ownProperties;
-    }
-    case PropertyFilter.ONLY_ENUMERABLE: {
-      return ownProperties.filter(
-        (property) =>
-          Object.getOwnPropertyDescriptor(value, property)?.enumerable,
-      );
-    }
-    default: {
-      throw new TypeError(
-        `Expected a PropertyFilter of either ALL_PROPERTIES (0) or ONLY_ENUMERABLE (2), but got ${filter}.`,
-      );
+  for (const [entryKey, entryValue] of Object.entries(desc)) {
+    if (
+      !/^(0|[1-9][0-9]*)$/.test(entryKey) ||
+      Number.parseInt(entryKey, 10) >= 2 ** 32 - 1
+    ) {
+      // Arrays are limited in size
+      if (filter === PropertyFilter.ONLY_ENUMERABLE && !entryValue.enumerable) {
+        continue;
+      }
+      ret.push(entryKey);
     }
   }
+
+  for (const sym of Object.getOwnPropertySymbols(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, sym);
+    if (filter === PropertyFilter.ONLY_ENUMERABLE && !descriptor?.enumerable) {
+      continue;
+    }
+    ret.push(sym);
+  }
+
+  return ret;
 }
 
 export function getPromiseState(promise: Promise<unknown>) {
