@@ -2,9 +2,41 @@
 
 # About
 
-An isomorphic port of a Node.js API, [require("node:util").inspect()](https://nodejs.org/api/util.html#utilinspectobject-options). Works on any (decently modern) JS runtime, as it has no dependency on V8 or Node.js. Can be used in the browser, in React Native, etc.
+An isomorphic port of a Node.js API, [require("node:util").inspect()](https://nodejs.org/api/util.html#utilinspectobject-options). Works on any (decently modern) JS runtime, as it has no dependency on V8 or Node.js. Can be used in the browser, in React Native, etc. Has no dependencies.
+
+# Usage
+
+Install as follows:
+
+```sh
+npm install util-inspect-isomorphic
+```
+
+Use just like the original (see the official Node.js [docs](https://nodejs.org/api/util.html#utilinspectobject-options) for full details):
+
+```js
+import { inspect } from "util-inspect-isomorphic";
+
+// Serialise Errors with cause:
+console.error(inspect(new Error("Outer", { cause: new Error("Inner") })));
+
+// Inspect deeply-nested objects:
+console.log(inspect({ a: { b: { c: { d: {} } } } }), { depth: null });
+
+// Print with colours:
+console.log(inspect(["wow", new Date(), true], { colors: true }));
+
+// Insert an underscore between every 3 digits:
+console.log(inspect(1000000000, { numericSeparator: true }));
+```
+
+# Engine support
+
+Requires ES6 and ESM support (or a bundler that can downlevel them).
 
 # Differences from the original
+
+This library is a port of the Node.js core code in [lib/internal/util/inspect.js](https://github.com/nodejs/node/blob/main/lib/internal/util/inspect.js) (and any dependent files) as it was in `main` on June 2025, so probably Node.js v24.1.0.
 
 - `Proxy` types cannot be inspected, so `showProxy: true` has no effect. Instead of the `Proxy` itself, the `Proxy` target will be inspected.
 - External (cross-realm, etc.) types, cannot show the memory address.
@@ -32,10 +64,31 @@ Here's a file-by-file summary of what was ported:
 
 # See also
 
-I found out about [node-inspect-extracted](https://github.com/hildjj/node-inspect-extracted) only after finishing this project. There are a few differences between our approaches.
+I found out about the excellent [node-inspect-extracted](https://github.com/hildjj/node-inspect-extracted) only after largely my own port. There are a few differences between our approaches.
 
-- `node-inspect-extracted` is designed to be easy to keep up to date with upstream, whereas `util-inspect-isomorphic` is a one-time snapshot.
-- `node-inspect-extracted` is fully [tested](https://github.com/hildjj/node-inspect-extracted/tree/main/test). No tests here, unfortunately.
-- `util-inspect-isomorphic` is a port to ESM (and TypeScript).
-- `util-inspect-isomorphic` is confirmed to work in React Native.
-  - I found that I had to change `const { Object } = primordials` to `primordials.Object` to get it to run. I can't be sure whether it was a Hermes runtime issue or a Metro bundling issue.
+- `node-inspect-extracted`:
+  - is a CommonJS library, written in JavaScript.
+  - is designed to be easy to keep up to date with upstream, whereas `util-inspect-isomorphic` is a one-time snapshot.
+  - has some [tests](https://github.com/hildjj/node-inspect-extracted/tree/main/test).
+- `util-inspect-isomorphic`:
+  - is a port to ESM, written in TypeScript.
+  - is confirmed to work in React Native.
+    - _I found that I had to change calls such as `const { Object } = primordials` to `primordials.Object` to get it to run. I can't be sure whether it was a Hermes runtime issue or a Metro bundling issue._
+  - is untested. Use at your own risk!
+
+# Contributing
+
+```sh
+# Clone the repo
+git clone git@github.com:shirakaba/util-inspect-isomorphic.git
+cd util-inspect-isomorphic
+
+# Install the dev dependencies
+npm install
+
+# Build the code from TypeScript to JavaScript
+npm run build
+
+# Test the code (e.g. by making a new script)
+node ./scripts/test.js
+```
