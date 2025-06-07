@@ -1,13 +1,14 @@
 /// <reference path="./error-capture-stack-trace.types.ts" />
 import { isSetIterator, isMapIterator } from "./internal-util-types.js";
 
-// Initially written with reference to the original implementation:
-// https://github.com/nodejs/node/blob/919ef7cae89ea9821db041cde892697cc8030b7c/src/node_util.cc#L52
-// https://source.chromium.org/chromium/chromium/src/+/main:v8/src/api/api.cc;l=4732?q=GetPropertyNames&sq=&ss=chromium%2Fchromium%2Fsrc:v8%2F
-//
-// ... Then simply replaced with the `node-inspect-extracted` implementation
-// once I remembered I'd overlooked the "non-index" part:
-// https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/util.js#L21
+/**
+ * From `node-inspect-extracted`:
+ * @see https://github.com/hildjj/node-inspect-extracted/blob/7ea8149fbda1a81322e2d99484fe1cb7873a5f1e/src/util.js#L21
+ *
+ * Original native code here:
+ * @see https://github.com/nodejs/node/blob/919ef7cae89ea9821db041cde892697cc8030b7c/src/node_util.cc#L52
+ * @see https://source.chromium.org/chromium/chromium/src/+/main:v8/src/api/api.cc;l=4732?q=GetPropertyNames&sq=&ss=chromium%2Fchromium%2Fsrc:v8%2F
+ */
 export function getOwnNonIndexProperties(
   value: unknown,
   filter = PropertyFilter.ONLY_ENUMERABLE,
@@ -49,6 +50,10 @@ export function getPromiseState(promise: Promise<unknown>) {
   );
 }
 
+/**
+ * @see https://github.com/nodejs/node/blob/919ef7cae89ea9821db041cde892697cc8030b7c/src/node_util.cc#L166
+ * @see https://source.chromium.org/chromium/chromium/src/+/main:v8/src/api/api.cc;l=11202?q=PreviewEntries&ss=chromium%2Fchromium%2Fsrc:v8%2F
+ */
 export function previewEntries(
   value: unknown,
   isKeyValue?: boolean,
@@ -68,8 +73,12 @@ export function previewEntries(
     }
 
     // JB: We can't determine whether the iterator is key-value in an
-    //     engine-agnostic manner, so we take isKeyValue.
-    return [elements, isKeyValue];
+    //     engine-agnostic manner, so report `isKeyValue` as `false`. This is
+    //     because it's safe downstream to call `formatSetIterInner()` on either
+    //     type, but unsafe to call `formatMapIterInner()` on anything but a
+    //     key-value iterator.
+    //
+    return [elements, false];
   }
 
   return [[], isKeyValue];

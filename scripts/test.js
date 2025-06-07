@@ -1,3 +1,4 @@
+// import { inspect } from "node:util";
 import { inspect } from "../dist/inspect.js";
 
 try {

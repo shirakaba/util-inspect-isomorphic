@@ -24,7 +24,7 @@ import {
   isArgumentsObject,
   isBoxedPrimitive,
   isDataView,
-  // isExternal,
+  isExternal,
   isMap,
   isMapIterator,
   isModuleNamespaceObject,
@@ -1332,13 +1332,11 @@ function formatRaw(
       //
       // // formatter = ctx.showHidden ? formatWeakMap : formatWeakCollection;
       formatter = formatWeakCollection;
-      // JB: I'm not aware of any way to detect a module namespace in an
-      //     engine-agnostic fashion.
-      //
-      // // } else if (isModuleNamespaceObject(value)) {
-      // //   braces[0] = `${getPrefix(constructor, tag, "Module")}{`;
-      // //   // Special handle keys for namespace objects.
-      // //   formatter = formatNamespaceObject.bind(null, keys);
+    } else if (isModuleNamespaceObject(value)) {
+      braces[0] = `${getPrefix(constructor, tag, "Module")}{`;
+      // Special handle keys for namespace objects.
+      // @ts-ignore
+      formatter = formatNamespaceObject.bind(null, keys);
     } else if (isBoxedPrimitive(value)) {
       base = getBoxedBase(value, ctx, keys, constructor, tag);
       if (keys.length === 0 && protoProps === undefined) {
@@ -1354,12 +1352,12 @@ function formatRaw(
       }
     } else {
       if (keys.length === 0 && protoProps === undefined) {
-        // JB: I'm not aware of any way to detect external values in an
-        //     engine-agnostic fashion.
-        // // if (isExternal(value)) {
-        // //   const address = getExternalValue(value).toString(16);
-        // //   return ctx.stylize(`[External: ${address}]`, "special");
-        // // }
+        if (isExternal(value)) {
+          // JB: No way to get address in an engine-agnostic fashion.
+          // // const address = getExternalValue(value).toString(16);
+          // // return ctx.stylize(`[External: ${address}]`, "special");
+          return ctx.stylize(`[External: <address unknown>]`, "special");
+        }
         return `${getCtxStyle(value, constructor, tag)}{}`;
       }
       braces[0] = `${getCtxStyle(value, constructor, tag)}{`;
@@ -2166,43 +2164,41 @@ function formatPrimitive(
   return fn(primordials.SymbolPrototypeToString(value), "symbol");
 }
 
-// JB: Used only for module namespace objects, which we don't yet support.
-//
-// // function formatNamespaceObject(
-// //   keys: Array<string>,
-// //   ctx: Context,
-// //   value: Record<string, unknown>,
-// //   recurseTimes: number,
-// // ) {
-// //   const output = new Array(keys.length);
-// //   for (let i = 0; i < keys.length; i++) {
-// //     try {
-// //       output[i] = formatProperty(
-// //         ctx,
-// //         value,
-// //         recurseTimes,
-// //         keys[i],
-// //         kObjectType,
-// //       );
-// //     } catch (err) {
-// //       assert(isNativeError(err) && (err as Error).name === "ReferenceError");
-// //       // Use the existing functionality. This makes sure the indentation and
-// //       // line breaks are always correct. Otherwise it is very difficult to keep
-// //       // this aligned, even though this is a hacky way of dealing with this.
-// //       const tmp = { [keys[i]]: "" };
-// //       output[i] = formatProperty(ctx, tmp, recurseTimes, keys[i], kObjectType);
-// //       const pos = StringPrototypeLastIndexOf(output[i], " ");
-// //       // We have to find the last whitespace and have to replace that value as
-// //       // it will be visualized as a regular string.
-// //       output[i] =
-// //         StringPrototypeSlice(output[i], 0, pos + 1) +
-// //         ctx.stylize("<uninitialized>", "special");
-// //     }
-// //   }
-// //   // Reset the keys to an empty array. This prevents duplicated inspection.
-// //   keys.length = 0;
-// //   return output;
-// // }
+function formatNamespaceObject(
+  keys: Array<string | symbol>,
+  ctx: Context,
+  value: Record<string, unknown>,
+  recurseTimes: number,
+) {
+  const output = new Array(keys.length);
+  for (let i = 0; i < keys.length; i++) {
+    try {
+      output[i] = formatProperty(
+        ctx,
+        value,
+        recurseTimes,
+        keys[i],
+        kObjectType,
+      );
+    } catch (err) {
+      assert(isNativeError(err) && (err as Error).name === "ReferenceError");
+      // Use the existing functionality. This makes sure the indentation and
+      // line breaks are always correct. Otherwise it is very difficult to keep
+      // this aligned, even though this is a hacky way of dealing with this.
+      const tmp = { [keys[i]]: "" };
+      output[i] = formatProperty(ctx, tmp, recurseTimes, keys[i], kObjectType);
+      const pos = primordials.StringPrototypeLastIndexOf(output[i], " ");
+      // We have to find the last whitespace and have to replace that value as
+      // it will be visualized as a regular string.
+      output[i] =
+        primordials.StringPrototypeSlice(output[i], 0, pos + 1) +
+        ctx.stylize("<uninitialized>", "special");
+    }
+  }
+  // Reset the keys to an empty array. This prevents duplicated inspection.
+  keys.length = 0;
+  return output;
+}
 
 // The array is sparse and/or has extra keys
 function formatSpecialArray(

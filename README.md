@@ -7,13 +7,10 @@ An isomorphic port of a Node.js API, [require("node:util").inspect()](https://no
 # Differences from the original
 
 - `Proxy` types cannot be inspected, so `showProxy: true` has no effect. Instead of the `Proxy` itself, the `Proxy` target will be inspected.
-- No special handling for cross-realm/external types. They will be treated the same as any other type.
-- No special handling for ECMAScript [NativeError](https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-native-error-types-used-in-this-standard) types. We only handle errors that satisfy `instanceof Error`.
-- No special handling for module namespace objects. Will probably be handled the same as any other `Record<string, unknown>` type.
+- External (cross-realm, etc.) types, cannot show the memory address.
 - Limited `Promise` introspection – we can't tell whether it is `<pending>`, `<rejected>`, or resolved, so we write `<uninspectable>` instead.
 - Type inspection can be fooled, as it doesn't use engine-level introspection.
 - Not all types of [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) get special handling. Namely `Float16Array`, `BigInt64Array`, and `BigUint64Array`.
-- Not safe from [prototype pollution](https://learn.snyk.io/lesson/prototype-pollution/?ecosystem=javascript), as the "primordials" used in here are merely used to match the coding style of the original implementation rather than being true [primordials](https://github.com/nodejs/node/blob/main/doc/contributing/primordials.md). To be clear, Node.js clarifies that it is [fine](https://github.com/nodejs/node/blob/main/doc/contributing/primordials.md#accessing-primordials) for userland code to rely on ECMAScript built-ins, and to leave the primordials to them.
 
 # Sources
 
@@ -27,10 +24,12 @@ Here's a file-by-file summary of what was ported:
 - [src/internal-assert.ts](./src/internal-assert.ts): [lib/internal/assert.js](https://github.com/nodejs/node/blob/main/lib/internal/assert.js)
 - [src/internal-errors.ts](./src/internal-errors.ts): [lib/internal/errors.js](https://github.com/nodejs/node/blob/main/lib/internal/errors.js)
 - [src/internal-util-types.ts](./src/internal-util-types.ts): [lib/internal/util/types.js](https://github.com/nodejs/node/blob/main/lib/internal/util/types.js)
+  - Some code reused from [node-inspect-extracted](https://github.com/hildjj/node-inspect-extracted/blob/main/src/internal/util/types.js), as per the code comments.
 - [src/internal-util.ts](./src/internal-util.ts): [lib/internal/util.js](https://github.com/nodejs/node/blob/main/lib/internal/util.js)
 - [src/internal-validators.ts](./src/internal-validators.ts): [lib/internal/validators.js](https://github.com/nodejs/node/blob/main/lib/internal/validators.js)
 - [src/primordials.ts](./src/primordials.ts): https://github.com/isaacs/node-primordials/blob/main/src/index.ts, itself a TypeScript port of [lib/internal/per_context/primordials.js](https://github.com/nodejs/node/blob/main/lib/internal/per_context/primordials.js)
 - [src/node-util.ts](./src/node-util.ts): [src/node_util.cc](https://github.com/nodejs/node/blob/main/src/node_util.cc)
+  - Some code reused from [node-inspect-extracted](https://github.com/hildjj/node-inspect-extracted/blob/main/src/util.js), as per the code comments.
 ```
 
 # See also
