@@ -2,7 +2,7 @@
 
 # About
 
-An isomorphic port of a Node.js API, [require("node:util").inspect()](https://nodejs.org/api/util.html#utilinspectobject-options). Works on any (decently modern) JS runtime, as it has no dependency on V8 or Node.js. Can be used in the browser, in React Native, etc. Has no dependencies.
+An isomorphic port of the Node.js API [require("node:util").inspect()](https://nodejs.org/api/util.html#utilinspectobject-options). Works on any (decently modern) JS runtime, as it has no dependency on V8 or Node.js. Can be used in the browser, in React Native, etc. Has no dependencies.
 
 # Usage
 
